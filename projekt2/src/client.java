@@ -14,7 +14,12 @@ import java.security.cert.*;
  * the firewall by following SSLSocketClientWithTunneling.java.
  */
 public class client {
-
+	// host = args[0]
+	// portnr = args[1]
+	// client's keystorepassword = args[2]
+	// client's truststorepassword = args[3]
+	// client's certificatepassword = args[4]
+	// client name = args[5]
     public static void main(String[] args) throws Exception {
         String host = null;
         int port = -1;
