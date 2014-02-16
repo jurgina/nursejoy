@@ -33,6 +33,7 @@ public class server implements Runnable {
             /*******************************LÄGG TILL ATT HÄMTA DIVISION!!!! JAAA*************************************************/
             int currType = 0;
             String name = "";
+            String currTypeStr = type[0];
             for(int i = 1; i < type.length; i++){
             	name += type[i] + " ";
             }
@@ -62,9 +63,13 @@ public class server implements Runnable {
             String clientMsg = null;
             while ((clientMsg = in.readLine()) != null) {
             	String[] message = clientMsg.split(" ");
-            	if(hasAccess(message[1], message[2], message[0], currType, name)){            		
+            	if(hasAccess(message[1], message[2], message[0], currType, name, currTypeStr)){            		
             		System.out.println("YES YOU CAN");
-            		out.println(1);            		
+            		out.println(1);
+            		String record = getRecord(message[1], message[2]);
+            		out.println(record);
+            		
+            		
             	}else{
             		out.println(0);
             	}
@@ -94,7 +99,39 @@ public class server implements Runnable {
         }
     }
 
-    private boolean hasAccess(String personnr, String date, String action, int currType, String name) {
+    private String getRecord(String personnr, String date){
+    	BufferedReader br = null;
+    	String res = "";
+		try {
+			br = new BufferedReader(new FileReader("Patient Files/" + personnr + "/" + date));
+		} catch (FileNotFoundException e) {			
+		}
+    	try {
+    	   StringBuilder sb = new StringBuilder();
+    	   String line = br.readLine();
+    	   while(line != null){
+    		   sb.append(line);
+    		   line = br.readLine();
+    	   }
+    	   res = sb.toString();
+    	}catch(Exception e){
+    		
+    	}
+    	return res;
+    }
+    
+    private boolean hasAccess(String personnr, String date, String action, int currType, String name, String currTypeStr) {
+    	System.out.println(personnr + date + action + currType + name + currTypeStr);
+    	
+    	if(action.equals("c") && currType == Doctor){
+			  return true;
+		 }else if(action.equals("d") && currType == Government){
+			  return true;
+		 }else if(action.equals("r") && currType == Government){
+			 return true;
+		 }
+    	System.out.println("Nope");
+    	
     	BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader("Patient Files/" + personnr + "/" + date));
@@ -106,11 +143,19 @@ public class server implements Runnable {
     	   String line = br.readLine();
     	   if(line != null){
     		  String[] accessPeople = line.split(",");    		  
-    		  for(String s : accessPeople){
-    			  String[] yay = s.split(" ");
-    			  
-    		  }
-    		   
+    		  for(String s : accessPeople){   
+    			  System.out.println(s);
+    			  s = s.trim();//trimma den jäveln!
+    			  if(s.startsWith(currTypeStr) && s.contains(name)){
+    				  System.out.println("all correct");
+    				  if(action.equals("r")){
+    					  System.out.println("Wants to read");
+    					  return true;
+    				  }else if(action.equals("w") && currType != Patient && currType != Government){
+    					  return true;    					  
+    				  }
+    			  }   			  
+    		  }    		   
     	   }else{
     		   return false;
     	   }
@@ -121,12 +166,9 @@ public class server implements Runnable {
     	    try {
 				br.close();
 			} catch (IOException e) {
-				
+				return false;
 			}
     	  }
-    	
-    	
-    	
     	return false;
     }
     
