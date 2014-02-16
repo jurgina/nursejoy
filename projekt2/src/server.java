@@ -96,6 +96,8 @@ public class server implements Runnable {
     }
 
     private boolean hasAccess(String personnr, String date, String action, int currType, String name, String currTypeStr) {
+    	System.out.println(personnr + date + action + currType + name + currTypeStr);
+    	
     	if(action.equals("c") && currType == Doctor){
 			  return true;
 		 }else if(action.equals("d") && currType == Government){
@@ -103,7 +105,7 @@ public class server implements Runnable {
 		 }else if(action.equals("r") && currType == Government){
 			 return true;
 		 }
-    	
+    	System.out.println("Nope");
     	
     	BufferedReader br = null;
 		try {
@@ -116,9 +118,13 @@ public class server implements Runnable {
     	   String line = br.readLine();
     	   if(line != null){
     		  String[] accessPeople = line.split(",");    		  
-    		  for(String s : accessPeople){    			  
+    		  for(String s : accessPeople){   
+    			  System.out.println(s);
+    			  s = s.trim();//trimma den jäveln!
     			  if(s.startsWith(currTypeStr) && s.contains(name)){
+    				  System.out.println("all correct");
     				  if(action.equals("r")){
+    					  System.out.println("Wants to read");
     					  return true;
     				  }else if(action.equals("w") && currType != Patient && currType != Government){
     					  return true;    					  
