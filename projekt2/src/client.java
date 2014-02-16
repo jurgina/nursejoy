@@ -110,7 +110,10 @@ public class client {
                 
                 if(serveranswer.equals("1")){ // om servern svara ja
                 	switch(action.charAt(0)){
-                	case 'r': System.out.println("Here is the record"); break; 
+                	
+                	case 'r': System.out.println("Here is the record! \n" + in.readLine() ); //ta emot stuff                	
+                	break; 
+                	
                 	case 'w': System.out.println("Write a story"); 
                 	msg = read.readLine(); 
                 	System.out.print("sending '" + msg + "' to server...");
@@ -118,6 +121,7 @@ public class client {
                     out.flush();
                     System.out.println("done");                	
                 	break;
+                	
                 	case 'c': 
                 	StringBuilder sb = new StringBuilder();
                 	System.out.println("Patient's name: ");
@@ -142,6 +146,7 @@ public class client {
                     out.flush();
                     System.out.println("done");  
                 	break;
+                	
                 	case 'd': System.out.println("The record has been murdered."); break;
                 	}
                 } else{
