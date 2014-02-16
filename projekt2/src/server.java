@@ -65,7 +65,11 @@ public class server implements Runnable {
             	String[] message = clientMsg.split(" ");
             	if(hasAccess(message[1], message[2], message[0], currType, name, currTypeStr)){            		
             		System.out.println("YES YOU CAN");
-            		out.println(1);            		
+            		out.println(1);
+            		String record = getRecord(message[1], message[2]);
+            		out.println(record);
+            		
+            		
             	}else{
             		out.println(0);
             	}
@@ -95,6 +99,27 @@ public class server implements Runnable {
         }
     }
 
+    private String getRecord(String personnr, String date){
+    	BufferedReader br = null;
+    	String res = "";
+		try {
+			br = new BufferedReader(new FileReader("Patient Files/" + personnr + "/" + date));
+		} catch (FileNotFoundException e) {			
+		}
+    	try {
+    	   StringBuilder sb = new StringBuilder();
+    	   String line = br.readLine();
+    	   while(line != null){
+    		   sb.append(line);
+    		   line = br.readLine();
+    	   }
+    	   res = sb.toString();
+    	}catch(Exception e){
+    		
+    	}
+    	return res;
+    }
+    
     private boolean hasAccess(String personnr, String date, String action, int currType, String name, String currTypeStr) {
     	System.out.println(personnr + date + action + currType + name + currTypeStr);
     	
