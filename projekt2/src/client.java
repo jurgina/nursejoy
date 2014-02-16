@@ -19,19 +19,18 @@ public class client {
 	// client's keystorepassword = args[2]
 	// client's truststorepassword = args[3]
 	// client's certificatepassword = args[4]
-	// client name = args[5]
     public static void main(String[] args) throws Exception {
         String host = null;
         int port = -1;
         char[] clientkeystorepassword = null;
         char[] clienttruststorepassword = null;
         char[] clientcertpassword = null;
-        String clientname="";
+        //String clientname="";
         for (int i = 0; i < args.length; i++) {
             System.out.println("args[" + i + "] = " + args[i]);
         }
-        if (args.length < 6) {
-            System.out.println("USAGE: java client host port clientkeystorepw clienttruststorepw clientname");
+        if (args.length < 5) {
+            System.out.println("USAGE: java client host port clientkeystorepw clienttruststorepw clientcertpassword");
             System.exit(-1);
         }
         try { /* get input parameters */
@@ -40,11 +39,11 @@ public class client {
             clientkeystorepassword = args[2].toCharArray();
             clienttruststorepassword = args[3].toCharArray();
             clientcertpassword = args[4].toCharArray();
-            clientname = args[5];
+           // clientname = args[5];
             
             
         } catch (IllegalArgumentException e) {
-            System.out.println("USAGE: java client host port clientkeystorepw clienttruststorepw clientname");
+            System.out.println("USAGE: java client host port clientkeystorepw clienttruststorepw clientcertpassword");
             System.exit(-1);
         }
 
