@@ -83,7 +83,7 @@ public class client {
             System.out.println("socket after handshake:\n" + socket + "\n");
             System.out.println("secure connection established\n\n");
             
-            	/**message stuff*/
+            	/*message stuff*/
             BufferedReader read = new BufferedReader(new InputStreamReader(System.in));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -125,6 +125,9 @@ public class client {
                 	sb.append(read.readLine());
                 	sb.append("\n");
                 	System.out.println("Personnummer: ");
+                	sb.append(read.readLine());
+                	sb.append("\n");
+                	System.out.println("Addmittance date: "); //ev nån annanstans
                 	sb.append(read.readLine());
                 	sb.append("\n");
                 	System.out.println("Nurse: ");
