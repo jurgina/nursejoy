@@ -28,22 +28,22 @@ public class server implements Runnable {
             System.out.println("client name (cert subject DN field): " + subject); //"CN=XXXXXX"
             System.out.println(numConnectedClients + " concurrent connection(s)\n");
             String[] strings = subject.split("=");
-            String[] type = strings[1].split(" ");
-            
-            /*******************************LÄGG TILL ATT HÄMTA DIVISION!!!! JAAA*************************************************/
+            String[] type = strings[1].split(":");
+            String division ="";
+          
             int currType = 0;
-            String name = "";
+            String name = type[1];
             String currTypeStr = type[0];
-            for(int i = 1; i < type.length; i++){
-            	name += type[i] + " ";
-            }
-            name = name.trim();
+            
+            
             switch(type[0]){
 	            case "Dr" : 
 	            	currType = Doctor;
+	            	division = type[2];
 	            	break;
 	            case "Nurse" : 
 	            	currType = Nurse;
+	            	division = type[2];
 	            	break;
 	            case "Mr" : 
 	            	currType = Government;
@@ -54,7 +54,7 @@ public class server implements Runnable {
             }
             System.out.println("Type = " + currType + " name = " + name);
             
-            
+            PrintWriter writer;
             PrintWriter out = null;
             BufferedReader in = null;
             out = new PrintWriter(socket.getOutputStream(), true);
@@ -62,14 +62,56 @@ public class server implements Runnable {
 
             String clientMsg = null;
             while ((clientMsg = in.readLine()) != null) {
+            	System.out.println("Start : ");
             	String[] message = clientMsg.split(" ");
-            	if(hasAccess(message[1], message[2], message[0], currType, name, currTypeStr)){            		
+            	if(hasAccess(message[1], message[2], message[0], currType, name, currTypeStr, division)){            		
             		System.out.println("YES YOU CAN");
             		out.println(1);
-            		String record = getRecord(message[1], message[2]);
-            		out.println(record);
-            		
-            		
+            		switch(message[0]){
+	            		case "r": 
+	            			System.out.println("Read:");
+	            			String record = getRecord(message[1], message[2]);
+	            			System.out.println(record);
+	                		out.println(record);
+	                		out.println("EOF");
+	            			break;
+	            		case "c": 
+	            			String patient = in.readLine();
+	            			/*String personnr = in.readLine();//nej
+	            			String admindate = in.readLine();//nej*/
+	            			String nurse = in.readLine();
+	            			String illness = in.readLine();
+	            			in.readLine();	            			
+	            			
+	            			File f = new File("Patient Files/" + message[1] + "/" + message[2]);
+	            			if(f.exists()){
+	            				out.println("Record already exist. Try writing to the file instead. ");
+	            			}else{
+	            				writer = new PrintWriter("Patient Files/" + message[1] + "/" + message[2], "UTF-8");
+		            			writer.println(patient);
+		            			writer.println("Patient " + message[1]+", Nurse " +nurse + ", Dr " + name);
+		            			writer.println(division);
+		            			writer.println("Illness:");
+		            			writer.println(illness);
+		            			writer.close();
+		            			out.println("Record created!");
+	            			}
+	            			break;
+	            		case "w": 
+	            			String msg = in.readLine();
+	            			System.out.println("Message from client : " + msg);
+	            			//writer = new PrintWriter("Patient Files/" + message[1] + "/" + message[2], "UTF-8");
+	            			try(PrintWriter wr = new PrintWriter(new BufferedWriter(new FileWriter("Patient Files/" + message[1] + "/" + message[2], true)))) {
+	            			    wr.println(msg);
+	            			}catch (IOException e) {
+	            				System.out.println("NOOO");
+	            			}
+	            			break;
+	            		case "d":
+	            			File fil = new File("Patient Files/" + message[1] + "/" + message[2]);
+	            			fil.delete();
+	            			break;
+            		}
             	}else{
             		out.println(0);
             	}
@@ -81,11 +123,9 @@ public class server implements Runnable {
                 System.out.print("sending '" + rev + "' to client...");
 				out.println(rev);
 				out.flush();*/
-                System.out.println("done\n");
+                System.out.println("done");
 			}
 			in.close();
-			
-				
 			
 			out.close();
 			socket.close();
@@ -104,26 +144,31 @@ public class server implements Runnable {
     	String res = "";
 		try {
 			br = new BufferedReader(new FileReader("Patient Files/" + personnr + "/" + date));
-		} catch (FileNotFoundException e) {			
+		} catch (FileNotFoundException e) {	
+			return "No file found";
 		}
     	try {
     	   StringBuilder sb = new StringBuilder();
     	   String line = br.readLine();
     	   while(line != null){
-    		   sb.append(line);
+    		   System.out.println("Line = " + line);
+    		   sb.append(line + "\n");
     		   line = br.readLine();
     	   }
     	   res = sb.toString();
     	}catch(Exception e){
-    		
+    		return "Got exception";
     	}
     	return res;
     }
     
-    private boolean hasAccess(String personnr, String date, String action, int currType, String name, String currTypeStr) {
-    	System.out.println(personnr + date + action + currType + name + currTypeStr);
+    private boolean hasAccess(String personnr, String date, String action, int currType, String name, String currTypeStr, String division) {
+    	System.out.println(personnr + date + action + currType + "----" + name +"----" +currTypeStr);
     	
     	if(action.equals("c") && currType == Doctor){
+    		if(new File("Patient Files/" + personnr + "/" + date).exists()){
+    			return false;
+    		}    		
 			  return true;
 		 }else if(action.equals("d") && currType == Government){
 			  return true;
@@ -141,8 +186,10 @@ public class server implements Runnable {
     	try {
     	   StringBuilder sb = new StringBuilder();
     	   String line = br.readLine();
+    	   line = br.readLine();
+    	   System.out.println(line);
     	   if(line != null){
-    		  String[] accessPeople = line.split(",");    		  
+    		  String[] accessPeople = line.split(",");
     		  for(String s : accessPeople){   
     			  System.out.println(s);
     			  s = s.trim();//trimma den jäveln!
@@ -154,8 +201,12 @@ public class server implements Runnable {
     				  }else if(action.equals("w") && currType != Patient && currType != Government){
     					  return true;    					  
     				  }
-    			  }   			  
-    		  }    		   
+    			  }
+    		  }
+    		  line = br.readLine().trim();
+    		  if(line.equals(division) && action.equals("r")){
+    			  return true;
+    		  }    		  
     	   }else{
     		   return false;
     	   }

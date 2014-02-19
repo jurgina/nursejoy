@@ -111,7 +111,14 @@ public class client {
                 if(serveranswer.equals("1")){ // om servern svara ja
                 	switch(action.charAt(0)){
                 	
-                	case 'r': System.out.println("Here is the record! \n" + in.readLine() ); //ta emot stuff                	
+                	case 'r':
+                		System.out.println("Here is the record!"); //ta emot stuff 
+                		String record = in.readLine();
+                		while(!record.equals("EOF")){
+                			System.out.println(record);
+                			record = in.readLine();
+                		}
+                	               	
                 	break; 
                 	
                 	case 'w': System.out.println("Write a story"); 
@@ -119,6 +126,7 @@ public class client {
                 	System.out.print("sending '" + msg + "' to server...");
                     out.println(msg);
                     out.flush();
+                   
                     System.out.println("done");                	
                 	break;
                 	
@@ -127,12 +135,12 @@ public class client {
                 	System.out.println("Patient's name: ");
                 	sb.append(read.readLine());
                 	sb.append("\n");
-                	System.out.println("Personnummer: ");
+                	/*System.out.println("Personnummer: ");
                 	sb.append(read.readLine());
                 	sb.append("\n");
                 	System.out.println("Addmittance date: "); //ev nån annanstans
                 	sb.append(read.readLine());
-                	sb.append("\n");
+                	sb.append("\n");*/
                 	System.out.println("Nurse: ");
                 	sb.append(read.readLine());
                 	sb.append("\n");
@@ -144,7 +152,8 @@ public class client {
                 	System.out.print("sending '" + msg + "' to server...");
                     out.println(msg);
                     out.flush();
-                    System.out.println("done");  
+                    String servmsg = in.readLine();
+                    System.out.println(servmsg);  
                 	break;
                 	
                 	case 'd': System.out.println("The record has been murdered."); break;
