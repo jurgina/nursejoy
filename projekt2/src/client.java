@@ -22,50 +22,54 @@ public class client {
     public static void main(String[] args) throws Exception {
         String host = null;
         int port = -1;
-        char[] clientkeystorepassword = null;
-        char[] clienttruststorepassword = null;
-        char[] clientcertpassword = null;
+        Console c = System.console();       
+        
         //String clientname="";
+        
+        if (args.length < 2) {
+            System.out.println("USAGE: java client host port");
+            System.exit(-1);
+        }        
         for (int i = 0; i < args.length; i++) {
             System.out.println("args[" + i + "] = " + args[i]);
-        }
-        if (args.length < 5) {
-            System.out.println("USAGE: java client host port clientkeystorepw clienttruststorepw clientcertpassword");
-            System.exit(-1);
-        }
+        }        
         try { /* get input parameters */
             host = args[0];
-            port = Integer.parseInt(args[1]);
-            clientkeystorepassword = args[2].toCharArray();
-            clienttruststorepassword = args[3].toCharArray();
-            clientcertpassword = args[4].toCharArray();
-           // clientname = args[5];
-            
-            
+            port = Integer.parseInt(args[1]);  
         } catch (IllegalArgumentException e) {
-            System.out.println("USAGE: java client host port clientkeystorepw clienttruststorepw clientcertpassword");
+            System.out.println("USAGE: java client host port");
             System.exit(-1);
         }
-
+        
         try { /* set up a key manager for client authentication */
             SSLSocketFactory factory = null;
-            try {
-                KeyStore ks = KeyStore.getInstance("JKS");
-                KeyStore ts = KeyStore.getInstance("JKS");
-                KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-                TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-                SSLContext ctx = SSLContext.getInstance("TLS");
-                ks.load(new FileInputStream("clientkeystore"), clientkeystorepassword);  // keystore password (storepass)
-				ts.load(new FileInputStream("clienttruststore"), clienttruststorepassword); // truststore password (storepass);
-				kmf.init(ks, clientcertpassword); // user password (keypass)
-				tmf.init(ts); // keystore can be used as truststore here
-				ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-                factory = ctx.getSocketFactory();
-            } catch (Exception e) {
-                throw new IOException(e.getMessage());
-            }
+            boolean clientConnected = false;
+            while(!clientConnected){
+            	try {
+                	char[] clientkeystorepassword = c.readPassword("Keystore password: ");
+                    char[] clienttruststorepassword =c.readPassword("Trusstore password: ");
+                    char[] clientcertpassword = c.readPassword("Certificate password: ");
+                    
+                    KeyStore ks = KeyStore.getInstance("JKS");
+                    KeyStore ts = KeyStore.getInstance("JKS");
+                    KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+                    SSLContext ctx = SSLContext.getInstance("TLS");
+                    ks.load(new FileInputStream("clientkeystore"), clientkeystorepassword);  // keystore password (storepass)
+    				ts.load(new FileInputStream("clienttruststore"), clienttruststorepassword); // truststore password (storepass);
+    				kmf.init(ks, clientcertpassword); // user password (keypass)
+    				tmf.init(ts); // keystore can be used as truststore here
+    				ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+                    factory = ctx.getSocketFactory();
+                    clientConnected = true;
+                } catch (Exception e) {
+                	clientConnected = false;
+                    System.out.println(e.getMessage());
+                }
+            }           
+            
             SSLSocket socket = (SSLSocket)factory.createSocket(host, port);
-            System.out.println("\nsocket before handshake:\n" + socket + "\n");
+            //System.out.println("\nsocket before handshake:\n" + socket + "\n");
 
             /*
              * send http request
@@ -78,8 +82,8 @@ public class client {
             SSLSession session = socket.getSession();
             X509Certificate cert = (X509Certificate)session.getPeerCertificateChain()[0];
             String subject = cert.getSubjectDN().getName();
-            System.out.println("certificate name (subject DN field) on certificate received from server:\n" + subject + "\n");
-            System.out.println("socket after handshake:\n" + socket + "\n");
+            //System.out.println("certificate name (subject DN field) on certificate received from server:\n" + subject + "\n");
+            //System.out.println("socket after handshake:\n" + socket + "\n");
             System.out.println("secure connection established\n\n");
             
             	/*message stuff*/
@@ -89,78 +93,108 @@ public class client {
             String msg;
             
 			for (;;) {
-				System.out.print("Operation (r/w/c/d/q): "); // r=read, w=write, c=create, d=delete, q=quit
-				String action = read.readLine(); 
+				boolean validAction = false;
+				String action = "";
+				while(!validAction){
+					System.out.print("Operation (r/w/c/d/q): "); // r=read, w=write, c=create, d=delete, q=quit
+					action = read.readLine(); 
+					if(action.equals("r") || action.equals("d") || action.equals("w") || action.equals("q") || action.equals("c")){
+						validAction = true;
+					}
+				}
+				
 				StringBuilder builder = new StringBuilder();
 				builder.append(action + " ");
 				if (action.equals("q")) {
 					break;
 				}
-                System.out.print("Patient's personnummer: ");                
-                builder.append(read.readLine() + " ");
-                System.out.println("Admittance date (yyyymmdd): ");
-                builder.append(read.readLine());
-                msg = builder.toString();
-                System.out.print("sending '" + msg + "' to server...");
+				boolean valid = false;
+	            boolean validdash = false;
+	            String personnbr = "";
+				while(!valid || !validdash){
+					valid = true;
+					validdash = true;
+					System.out.print("Patient's personnummer (yymmdd-xxxx): ");  
+	                personnbr = read.readLine();	               
+	                if(personnbr.length() == 11){
+	                	for(int i = 0; i < 11; i++){
+	                		if(i == 6){
+	                			if(personnbr.charAt(i) != '-'){		                			
+		                			validdash = false;	 
+	                			}
+	                		}else if(!Character.isDigit(personnbr.charAt(i))){	                			
+	            				valid = false;
+	            			}                		
+	                	}
+	                }else{
+	                	valid = false;
+	                }
+	                if(!valid || !validdash) System.out.println("Invalid personumber format (yymmdd-xxxx). Please reenter personnumber. ");
+				}
+                builder.append(personnbr + " ");
+                String date = "";
+                valid = false;
+                while(!valid){
+                	valid = true;
+                	System.out.print("Admittance date (yyyymmdd): ");
+                	date = read.readLine();
+                	if(date.length() == 8){
+                		for(int i = 0; i < 8; i++){
+                			if(!Character.isDigit(date.charAt(i))){
+	            				valid = false;
+	            			}
+                		}
+                	}else{
+                		valid = false;
+                	}
+                	if(!valid) System.out.println("Invalid date format (yyyymmdd). Please reenter date. ");                	
+                }                
+                builder.append(date);
+                msg = builder.toString();                
                 out.println(msg);
-                out.flush();
-                System.out.println("done");
+                out.flush();                
                 String serveranswer = in.readLine();
-                System.out.println("received '" + serveranswer + "' from server\n");
+                String acc = serveranswer.equals("1") ? "granted" : "denied";
+                System.out.println("Received access " + acc + " from server");                
                 
                 if(serveranswer.equals("1")){ // om servern svara ja
                 	switch(action.charAt(0)){
                 	
                 	case 'r':
-                		System.out.println("Here is the record!"); //ta emot stuff 
+                		System.out.println("Record: "); //ta emot stuff 
                 		String record = in.readLine();
                 		while(!record.equals("EOF")){
                 			System.out.println(record);
                 			record = in.readLine();
-                		}
-                	               	
-                	break; 
-                	
-                	case 'w': System.out.println("Write a story"); 
-                	msg = read.readLine(); 
-                	System.out.print("sending '" + msg + "' to server...");
-                    out.println(msg);
-                    out.flush();
-                   
-                    System.out.println("done");                	
-                	break;
-                	
+                		}                	               	
+                	break;                	
+                	case 'w': System.out.println("Enter new information: "); 
+	                	msg = read.readLine(); 	                	
+	                    out.println(msg);
+	                    out.flush();
+	                    System.out.println("Information added");                	
+	                	break;                	
                 	case 'c': 
-                	StringBuilder sb = new StringBuilder();
-                	System.out.println("Patient's name: ");
-                	sb.append(read.readLine());
-                	sb.append("\n");
-                	/*System.out.println("Personnummer: ");
-                	sb.append(read.readLine());
-                	sb.append("\n");
-                	System.out.println("Addmittance date: "); //ev nån annanstans
-                	sb.append(read.readLine());
-                	sb.append("\n");*/
-                	System.out.println("Nurse: ");
-                	sb.append(read.readLine());
-                	sb.append("\n");
-                	//om johan inte fixat his shit så behöver vi lägga in division oxå
-                	System.out.println("Illness: ");
-                	sb.append(read.readLine());
-                	sb.append("\n");
-                	msg = sb.toString();
-                	System.out.print("sending '" + msg + "' to server...");
-                    out.println(msg);
-                    out.flush();
-                    String servmsg = in.readLine();
-                    System.out.println(servmsg);  
-                	break;
+	                	StringBuilder sb = new StringBuilder();
+	                	System.out.println("Enter patient's name: ");
+	                	sb.append(read.readLine());
+	                	sb.append("\n");                	
+	                	System.out.println("Enter the attending nurse's name: ");
+	                	sb.append(read.readLine());
+	                	sb.append("\n");	                	
+	                	System.out.println("Enter patients medical information: ");
+	                	sb.append(read.readLine());
+	                	sb.append("\n");
+	                	msg = sb.toString();	                	
+	                    out.println(msg);
+	                    out.flush();
+	                    String servmsg = in.readLine();
+	                    System.out.println(servmsg);  
+	                	break;
                 	
-                	case 'd': System.out.println("The record has been murdered."); break;
+                	case 'd': System.out.println("The record has been deleted."); break;
                 	}
-                } else{
-                	System.out.println("You don't have the AUTHORITHAI to do that action.");
-                }
+                } 
             }
 
             in.close();
