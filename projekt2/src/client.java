@@ -70,7 +70,11 @@ public class client {
             
             SSLSocket socket = (SSLSocket)factory.createSocket(host, port);
             //System.out.println("\nsocket before handshake:\n" + socket + "\n");
-
+            
+            String[] ss = socket.getSupportedCipherSuites();
+            for(String s : ss){
+            	System.out.println("Cipher : " + s);
+            }
             /*
              * send http request
              *
